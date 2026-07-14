@@ -8,12 +8,12 @@ from transformers import pipeline, set_seed
 # Fix random seed for reproducibility
 set_seed(42)
 
-# --- EPIC 2 STORY 5: JSON HISTORY LOGGER MECHANISM ---
-# Using pathlib.Path ensures cross-platform compatibility across Windows, macOS, and Linux
+# --- TRACKING PATH REGISTRY ---
 HISTORY_FILE = Path("conversation_history.json")
+FEEDBACK_FILE = Path("user_feedback.json")  # Pathlib handling for explicit user feedback logs
 
+# --- EPIC 2 STORY 5: JSON HISTORY LOGGER ---
 def load_history() -> list:
-    """Provides a clean read interface that always returns a list, even when no history exists."""
     if not HISTORY_FILE.exists():
         return []
     try:
@@ -23,13 +23,7 @@ def load_history() -> list:
         return []
 
 def log_conversation(event_description: str, interests: str, extracted_themes: list, starters: list):
-    """
-    Appends the conversation metrics using a read-modify-write pattern to ensure data integrity.
-    Includes an ISO-formatted timestamp on every session block.
-    """
     history_data = load_history()
-    
-    # Construct data record structure with ISO-formatted timestamp
     new_entry = {
         "timestamp": datetime.now().isoformat(),
         "event_description": event_description,
@@ -37,15 +31,47 @@ def log_conversation(event_description: str, interests: str, extracted_themes: l
         "extracted_themes": extracted_themes,
         "starters": starters
     }
-    
-    # Simple append-to-JSON-list pattern
     history_data.append(new_entry)
-    
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(history_data, f, indent=4)
 
 
-# --- TRANSFORMATION PIPELINES MODULE LOAD ---
+# --- EPIC 2 STORY 6: JSON FEEDBACK LOGGER MECHANISM ---
+def load_feedback_records() -> list:
+    """Helper to ensure clean array read access interfaces."""
+    if not FEEDBACK_FILE.exists():
+        return []
+    try:
+        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def log_user_feedback(suggestion_text: str, is_useful: bool):
+    """
+    Epic 2 Story 6: Feedback Logger Service Development.
+    Captures the exact suggestion text, maps usability to 'like' or 'dislike' strings,
+    and appends records with a precise timestamp using a cross-platform Path tracker.
+    """
+    feedback_data = load_feedback_records()
+    
+    # Structural mapping to 'like' or 'dislike' action strings
+    action_type = "like" if is_useful else "dislike"
+    
+    new_feedback = {
+        "suggestion_text": suggestion_text,
+        "action": action_type,
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    feedback_data.append(new_feedback)
+    
+    # Write entire updated array list structurally back onto the local disk platform
+    with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+        json.dump(feedback_data, f, indent=4)
+
+
+# --- MACHINE LEARNING MODEL INFERENCE ENGINE MODULE ---
 try:
     classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
     generator = pipeline("text-generation", model="gpt2")
@@ -95,10 +121,7 @@ def generate_topics(extracted_themes: list, interests: str) -> list:
 def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
     themes = extract_event_themes(event_description)
     starters = generate_topics(themes, interests)
-    
-    # Trigger the file-based JSON history logger append event
     log_conversation(event_description, interests, themes, starters)
-    
     return {"extracted_themes": themes, "starters": starters}
 
 def fetch_wikipedia_summary(topic: str) -> str:
