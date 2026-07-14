@@ -12,62 +12,83 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- ATTRACTIVE UI/UX STYLING INJECTIONS ---
+# --- LUXURY PROFESSIONAL DARK THEME INJECTIONS ---
 st.markdown("""
     <style>
-        /* Modern Soft Background */
-        .main {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        /* Base page styling setup */
+        .stApp {
+            background-color: #0b0f19 !important;
+            color: #f1f5f9 !important;
         }
         
-        /* Premium Header Styling Banner */
+        /* Ultra-Premium Radiant Gradient Header Banner */
         .header-container {
-            background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%);
-            padding: 30px;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #0f172a 100%);
+            padding: 40px;
+            border-radius: 20px;
             color: white;
-            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
-            margin-bottom: 25px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
         }
         
-        /* Sleek Cards for Icebreaker Suggestions */
+        /* Glassmorphism Input Containers */
+        div[data-testid="stForm"], .stTextInput, .stTextArea {
+            background-color: #111827 !important;
+            border-radius: 12px !important;
+        }
+
+        /* Glowing Futuristic Cards for Icebreaker Suggestions */
         .icebreaker-box {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 5px solid #4f46e5;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            margin-bottom: 14px;
-            font-size: 1.05rem;
-            color: #1e293b;
-            transition: transform 0.2s ease;
+            background: linear-gradient(145deg, #111827, #1f2937);
+            padding: 24px;
+            border-radius: 14px;
+            border-left: 5px solid #6366f1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            margin-bottom: 18px;
+            font-size: 1.1rem;
+            color: #e2e8f0;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .icebreaker-box:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.15);
+            border-left-color: #818cf8;
         }
         
-        /* Sleek Cards for Fact Validator Output */
+        /* Glowing Futuristic Cards for Fact Validator Output */
         .wiki-box {
-            background-color: #ffffff;
-            padding: 24px;
-            border-radius: 12px;
-            border-left: 5px solid #0ea5e9;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            margin-top: 14px;
-            line-height: 1.6;
-            color: #334155;
+            background: linear-gradient(145deg, #111827, #1f2937);
+            padding: 28px;
+            border-radius: 14px;
+            border-left: 5px solid #06b6d4;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            margin-top: 18px;
+            line-height: 1.7;
+            color: #cbd5e1;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        /* Modernized Sidebar Style Elements */
+        /* Deep Custom Sidebar Palette */
         section[data-testid="stSidebar"] {
-            background-color: #ffffff !important;
-            border-right: 1px solid #e2e8f0;
+            background-color: #070a13 !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Styling Form Sections */
-        div[data-testid="stForm"] {
-            border-radius: 12px !important;
-            background-color: #ffffff;
+        /* Customize Tab selectors */
+        button[data-baseweb="tab"] {
+            color: #94a3b8 !important;
+            font-size: 1.05rem !important;
+        }
+        button[data-baseweb="tab"][aria-selected="true"] {
+            color: #6366f1 !important;
+            font-weight: bold !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -108,11 +129,11 @@ def cloud_fetch_wikipedia_summary(topic):
 if "cloud_history" not in st.session_state:
     st.session_state["cloud_history"] = []
 
-# --- MAIN ATTRACIVE HEADER CONTAINER ---
+# --- MAIN PREMIUM RADIANT HEADER CONTAINER ---
 st.markdown("""
     <div class="header-container">
-        <h1 style='margin:0; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.5px;'>🤝 AI-Powered Personalized Networking Assistant</h1>
-        <p style='margin:5px 0 0 0; opacity: 0.9; font-size: 1.05rem;'>Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines</p>
+        <h1 style='margin:0; font-size: 2.75rem; font-weight: 800; letter-spacing: -0.75px; background: linear-gradient(to right, #ffffff, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>🤝 AI-Powered Personalized Networking Assistant</h1>
+        <p style='margin:10px 0 0 0; color: #94a3b8; font-size: 1.1rem;'>Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines</p>
     </div>
 """, unsafe_allow_html=True)
 
