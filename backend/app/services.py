@@ -1,14 +1,53 @@
 import requests
 import re
+import json
+from datetime import datetime
+from pathlib import Path
 from transformers import pipeline, set_seed
 
 # Fix random seed for reproducibility
 set_seed(42)
 
+# --- EPIC 2 STORY 5: JSON HISTORY LOGGER MECHANISM ---
+# Using pathlib.Path ensures cross-platform compatibility across Windows, macOS, and Linux
+HISTORY_FILE = Path("conversation_history.json")
+
+def load_history() -> list:
+    """Provides a clean read interface that always returns a list, even when no history exists."""
+    if not HISTORY_FILE.exists():
+        return []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def log_conversation(event_description: str, interests: str, extracted_themes: list, starters: list):
+    """
+    Appends the conversation metrics using a read-modify-write pattern to ensure data integrity.
+    Includes an ISO-formatted timestamp on every session block.
+    """
+    history_data = load_history()
+    
+    # Construct data record structure with ISO-formatted timestamp
+    new_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "event_description": event_description,
+        "interests": interests,
+        "extracted_themes": extracted_themes,
+        "starters": starters
+    }
+    
+    # Simple append-to-JSON-list pattern
+    history_data.append(new_entry)
+    
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history_data, f, indent=4)
+
+
+# --- TRANSFORMATION PIPELINES MODULE LOAD ---
 try:
-    # Loads DistilBERT for themes once at startup
     classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
-    # Loads GPT-2 for short conversation starters
     generator = pipeline("text-generation", model="gpt2")
 except Exception:
     classifier = None
@@ -56,6 +95,10 @@ def generate_topics(extracted_themes: list, interests: str) -> list:
 def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
     themes = extract_event_themes(event_description)
     starters = generate_topics(themes, interests)
+    
+    # Trigger the file-based JSON history logger append event
+    log_conversation(event_description, interests, themes, starters)
+    
     return {"extracted_themes": themes, "starters": starters}
 
 def fetch_wikipedia_summary(topic: str) -> str:
