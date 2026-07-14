@@ -7,10 +7,23 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 import streamlit as st
-import requests
+import uuid
+from datetime import datetime
 
-# --- CONNECTION HUB REGISTRY ---
-BASE_URL = "http://127.0.0.1:8080/api"
+# --- DIRECT SERVICE LAYER IMPORTS (Bypasses Localhost Server API) ---
+try:
+    from backend.app.services import (
+        extract_event_themes, 
+        generate_topics, 
+        fetch_wikipedia_summary,
+        log_user_feedback,
+        load_feedback_records
+    )
+    # Mocking history logging locally for cloud environment stability
+    if "cloud_history" not in st.session_state:
+        st.session_state["cloud_history"] = []
+except ImportError:
+    st.error("Missing backend service path modules. Verify repository file structure configurations.")
 
 st.set_page_config(
     page_title="AI Personalized Networking Assistant",
@@ -24,50 +37,37 @@ st.caption("Finetuned Modular Interface with Zero-Shot & Generative NLP Pipeline
 # --- SIDEBAR TELEMETRY DASHBOARD PANEL ---
 st.sidebar.header("📜 Saved Session History")
 if st.sidebar.button("Refresh History Feeds", type="secondary"):
-    try:
-        res = requests.get(f"{BASE_URL}/history")
-        if res.status_code == 200:
-            history_records = res.json().get("history", [])
-            if not history_records:
-                st.sidebar.info("No transaction logs archived yet.")
-            else:
-                # Slices for the 5 most recent entries to prevent UI bloating
-                recent_history = history_records[-5:]
-                for item in reversed(recent_history):
-                    with st.sidebar.expander(f"📌 Session {item['id']} - {item['event_description'][:15]}..."):
-                        st.caption(f"Logged: {item['timestamp'][:16]}")
-                        st.write(f"**Interests:** {item['interests']}")
-                        st.markdown("---")
-                        st.write("**Icebreakers:**")
-                        for s in item["starters"]:
-                            st.write(f"- {s}")
-    except Exception:
-        st.sidebar.error("Could not communicate with Backend Orchestration Server.")
+    history_records = st.session_state.get("cloud_history", [])
+    if not history_records:
+        st.sidebar.info("No transaction logs archived yet.")
+    else:
+        recent_history = history_records[-5:]
+        for item in reversed(recent_history):
+            with st.sidebar.expander(f"📌 Session {item['id'][:8]}..."):
+                st.caption(f"Logged: {item['timestamp']}")
+                st.write(f"**Interests:** {item['interests']}")
+                st.markdown("---")
+                st.write("**Icebreakers:**")
+                for s in item["starters"]:
+                    st.write(f"- {s}")
 
 st.sidebar.markdown("---")
 st.sidebar.header("📊 Recent Prompt Feedback Logs")
 if st.sidebar.button("Fetch Feedback Analytics", type="secondary"):
     try:
-        # Load the mock or real JSON analytics registry stack directly from services
-        from backend.app.services import load_feedback_records
         feedback_list = load_feedback_records()
-        
         if not feedback_list:
             st.sidebar.info("No explicit downvote/upvote metrics tracked yet.")
         else:
-            # Show up to 10 recent feedback entries (double the history limit for granularity)
             recent_feedback = feedback_list[-10:]
             for fb in reversed(recent_feedback):
-                # Ternary expression for the icon variable based on action sentiment
                 icon = "👍" if fb.get("action") == "like" else "👎"
-                
                 with st.sidebar.container():
                     st.write(f"{icon} **Prompt:** *\"{fb.get('suggestion_text')[:40]}...\"*")
-                    # Subdued caption tracking text hierarchies for metadata processing
-                    st.caption(f"Logged timestamp: {fb.get('timestamp')[:19]}")
+                    st.caption(f"Logged: {fb.get('timestamp')[:19]}")
                     st.markdown("---")
     except Exception:
-        st.sidebar.info("Generate icebreakers and upvote/downvote below to populate telemetry tracks.")
+        st.sidebar.info("Generate icebreakers and rate them below to populate telemetry tracks.")
 
 # --- CORE APP TABS INTERACTION SECTION ---
 tab1, tab2 = st.tabs(["🚀 Conversation Starter Engine", "🔍 Wiki Fact Validator"])
@@ -83,22 +83,26 @@ with tab1:
         if event_desc.strip() and user_interests.strip():
             with st.spinner("Executing NLP Pipeline Orchestration Steps..."):
                 try:
-                    cleaned_interests = [i.strip() for i in user_interests.split(',')]
-                    joined_interests = ", ".join(cleaned_interests)
+                    # Execute services directly in-process
+                    candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
+                    extracted = extract_event_themes(event_desc, candidate_labels)
+                    starters = generate_topics(extracted, user_interests)
+                    session_id = str(uuid.uuid4())
                     
-                    payload = {"event_description": event_desc, "interests": joined_interests}
-                    res = requests.post(f"{BASE_URL}/generate-conversation", json=payload)
+                    st.session_state["active_session_id"] = session_id
+                    st.session_state["last_starters"] = starters
                     
-                    if res.status_code == 200:
-                        data = res.json()
-                        st.success("Analysis Complete!")
-                        st.subheader("🎯 Discovered Event Themes:")
-                        st.write(", ".join(data["extracted_themes"]))
-                        
-                        st.session_state["active_session_id"] = data["session_id"]
-                        st.session_state["last_starters"] = data["starters"]
-                except Exception:
-                    st.error("Connection drops detected along the backend processing network tier.")
+                    # Log into session state history
+                    st.session_state["cloud_history"].append({
+                        "id": session_id,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "event_description": event_desc,
+                        "interests": user_interests,
+                        "starters": starters
+                    })
+                    st.success("Analysis Complete!")
+                except Exception as e:
+                    st.error(f"Execution Error: {str(e)}")
         else:
             st.warning("Please supply valid text contents for both context forms.")
 
@@ -111,10 +115,6 @@ with tab1:
             
             if col1.button(f"👍 Upvote {idx+1}", key=f"like_{idx}"):
                 try:
-                    feedback_payload = {"session_id": st.session_state["active_session_id"], "is_useful": True}
-                    requests.post(f"{BASE_URL}/feedback", json=feedback_payload)
-                    # Trigger an immediate side-effect fallback entry into service json files
-                    from backend.app.services import log_user_feedback
                     log_user_feedback(starter, True)
                     st.toast("Upvote registered inside telemetry logs!")
                 except Exception:
@@ -122,9 +122,6 @@ with tab1:
                     
             if col2.button(f"👎 Downvote {idx+1}", key=f"dislike_{idx}"):
                 try:
-                    feedback_payload = {"session_id": st.session_state["active_session_id"], "is_useful": False}
-                    requests.post(f"{BASE_URL}/feedback", json=feedback_payload)
-                    from backend.app.services import log_user_feedback
                     log_user_feedback(starter, False)
                     st.toast("Downvote registered inside telemetry logs!")
                 except Exception:
@@ -138,9 +135,8 @@ with tab2:
         if topic_query.strip():
             with st.spinner("Extracting verified reference blocks..."):
                 try:
-                    res = requests.post(f"{BASE_URL}/fact-check", json={"topic": topic_query})
-                    if res.status_code == 200:
-                        st.success("Verification Complete!")
-                        st.info(res.json().get("verified_summary"))
-                except Exception:
-                    st.error("Verification processing engine timeout error.")
+                    summary = fetch_wikipedia_summary(topic_query)
+                    st.success("Verification Complete!")
+                    st.info(summary)
+                except Exception as e:
+                    st.error(f"Verification processing engine error: {str(e)}")
