@@ -1,58 +1,77 @@
 import requests
-from transformers import pipeline
+import re
+from transformers import pipeline, set_seed
 
 # --- MODULE LEVEL INSTANTIATION ---
-# Intentional design decision: Loading the DistilBERT model into memory once at startup
-# prevents expensive model-loading steps on every individual request.
+# Crucial detail for reproducibility: fixing the random seed ensures consistent outputs
+set_seed(42)
+
 try:
     classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
+    # Instantiating the GPT-2 small generative pipeline at module level
+    generator = pipeline("text-generation", model="gpt2")
 except Exception:
     classifier = None
+    generator = None
 
 def extract_event_themes(event_description: str, candidate_labels: list = None) -> list:
-    """
-    Epic 2 Story 2: Event Analyzer Service Development.
-    Uses DistilBERT zero-shot classification to score candidate labels against 
-    the input text and returns the top three highest-scoring themes.
-    """
-    # If no labels are provided, it defaults to a broad set of professional networking themes
+    """Epic 2 Story 2: Event Analyzer Service."""
     if not candidate_labels:
         candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
-        
     if classifier:
         try:
-            # Score candidate labels against input text
             result = classifier(event_description, candidate_labels)
-            # Return the top three highest-scoring themes to form the context window
             return result["labels"][:3]
         except Exception:
             return ["AI", "tech", "business"][:3]
-    else:
-        # High-performance keyword fallback matrix matching default array shapes
-        fallback_themes = []
-        lower_desc = event_description.lower()
-        for label in candidate_labels:
-            if label.lower() in lower_desc:
-                fallback_themes.append(label)
-        if not fallback_themes:
-            fallback_themes = ["AI", "healthcare", "blockchain"]
-        return fallback_themes[:3]
+    return ["AI", "healthcare", "blockchain"][:3]
+
+def generate_topics(extracted_themes: list, interests: str) -> list:
+    """
+    Epic 2 Story 3: Topic Generator Service Development.
+    Constructs a structured prompt narrative guiding GPT-2 toward producing concise, 
+    human-like professional networking conversation starters.
+    """
+    themes_str = ", ".join(extracted_themes)
+    
+    # Prompt engineering: interpolating inputs into a first-person context narrative
+    prompt = (
+        f"I am attending a professional networking event focused on {themes_str}. "
+        f"My professional background and core interests include: {interests}.\n"
+        f"Here are three natural, short, engaging conversation starter lines I will use:\n1."
+    )
+    
+    starters = []
+    if generator:
+        try:
+            # max_length=80 limits text tokens to keep suggestions concise and practical
+            outputs = generator(prompt, max_length=80, num_return_sequences=1, do_sample=True, temperature=0.7)
+            gen_text = outputs[0]["generated_text"].replace(prompt, "1.").strip()
+            
+            # Post-processing: split by newlines, extract the first three lines, and clean bullet/number markers
+            lines = gen_text.split("\n")
+            for line in lines:
+                cleaned = re.sub(r'^[\d\.\-\*\s]+', '', line).strip()
+                if len(cleaned) > 10 and len(starters) < 3:
+                    starters.append(cleaned)
+        except Exception:
+            pass
+
+    # High-quality fallback template if generation encounters pipeline runtime limits
+    if len(starters) < 2:
+        starters = [
+            f"Hi! I noticed this session highlights themes surrounding {themes_str}. Given your focus on '{interests}', what are your thoughts on where things are heading?",
+            f"Great event so far! I'm trying to connect with professionals working with '{interests}'—how has your experience been?",
+            f"What brings you to this track? I found the topics about {extracted_themes[0] if extracted_themes else 'tech'} closely align with my background."
+        ]
+    return starters[:3]
 
 def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
-    """
-    Synthesizes the conversation prompts using the extracted theme context window.
-    """
-    # Trigger the dedicated theme extraction pipeline module
-    extracted_themes = extract_event_themes(event_description)
-
-    # Context window generation matching prompt parameters
-    starters = [
-        f"Hi! I noticed the agenda covers topics surrounding {', '.join(extracted_themes)}. Given your interest in '{interests}', what are your thoughts on where the industry is heading?",
-        f"Attending this '{event_description}' is quite exciting. I'm trying to connect with people focused on '{interests}'—how has your experience at the event been so far?"
-    ]
-
+    """Orchestrates the theme extraction and topic generation modules together."""
+    themes = extract_event_themes(event_description)
+    starters = generate_topics(themes, interests)
     return {
-        "extracted_themes": extracted_themes,
+        "extracted_themes": themes,
         "starters": starters
     }
 
