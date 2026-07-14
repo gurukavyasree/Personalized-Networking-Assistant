@@ -12,25 +12,76 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- ATTRACTIVE UI/UX STYLING INJECTIONS ---
+st.markdown("""
+    <style>
+        /* Modern Soft Background */
+        .main {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        /* Premium Header Styling Banner */
+        .header-container {
+            background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%);
+            padding: 30px;
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
+            margin-bottom: 25px;
+        }
+        
+        /* Sleek Cards for Icebreaker Suggestions */
+        .icebreaker-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #4f46e5;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 14px;
+            font-size: 1.05rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        .icebreaker-box:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Sleek Cards for Fact Validator Output */
+        .wiki-box {
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 5px solid #0ea5e9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            margin-top: 14px;
+            line-height: 1.6;
+            color: #334155;
+        }
+
+        /* Modernized Sidebar Style Elements */
+        section[data-testid="stSidebar"] {
+            background-color: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        /* Styling Form Sections */
+        div[data-testid="stForm"] {
+            border-radius: 12px !important;
+            background-color: #ffffff;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- CLOUD PROCESSING LAYER SERVICES ---
 
 def cloud_extract_event_themes(description, candidate_labels):
-    """
-    Zero-shot contextual keyword and theme extraction parser.
-    Identifies matched agenda domains within the description.
-    """
     desc_lower = description.lower()
     found = [label for label in candidate_labels if label.lower() in desc_lower]
     if not found:
-        # Defaults to most common framework variations if no explicitly targeted terms map directly
         return ["AI", "sustainability"][:3]
     return found[:3]
 
 def cloud_generate_topics(themes, interests):
-    """
-    Generates dynamic variations of custom conversation icebreakers
-    based on the profile's professional context.
-    """
     theme_str = ", ".join(themes)
     return [
         f"Hi! I noticed you are interested in {interests}. Are you attending any of the {theme_str} tracks today?",
@@ -39,19 +90,11 @@ def cloud_generate_topics(themes, interests):
     ]
 
 def cloud_fetch_wikipedia_summary(topic):
-    """
-    Defensive network boundary request layer.
-    Queries the public Wikipedia REST API, passing a custom User-Agent header
-    profile to securely circumvent 403 authorization rejections.
-    """
     formatted_topic = topic.strip().replace(" ", "_")
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_topic}"
-    
-    # Custom API tracking headers to satisfy Wikipedia access policies
     headers = {
         "User-Agent": "PersonalizedNetworkingAssistant/1.0 (gurukavyasreedireddy@gmail.com)"
     }
-    
     try:
         response = requests.get(url, headers=headers, timeout=7)
         if response.status_code == 200:
@@ -65,9 +108,13 @@ def cloud_fetch_wikipedia_summary(topic):
 if "cloud_history" not in st.session_state:
     st.session_state["cloud_history"] = []
 
-# --- RENDER WEB COMPONENT PLATFORM ---
-st.title("🤝 AI-Powered Personalized Networking Assistant")
-st.caption("Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines")
+# --- MAIN ATTRACIVE HEADER CONTAINER ---
+st.markdown("""
+    <div class="header-container">
+        <h1 style='margin:0; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.5px;'>🤝 AI-Powered Personalized Networking Assistant</h1>
+        <p style='margin:5px 0 0 0; opacity: 0.9; font-size: 1.05rem;'>Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines</p>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- SIDEBAR TELEMETRY DASHBOARD PANEL ---
 st.sidebar.header("📜 Saved Session History")
@@ -76,8 +123,7 @@ if st.sidebar.button("Refresh History Feeds", type="secondary"):
     if not history_records:
         st.sidebar.info("No transaction logs archived yet.")
     else:
-        recent_history = history_records[-5:]
-        for item in reversed(recent_history):
+        for item in reversed(history_records[-5:]):
             with st.sidebar.expander(f"📌 Session {item['id'][:8]}..."):
                 st.caption(f"Logged: {item['timestamp']}")
                 st.write(f"**Interests:** {item['interests']}")
@@ -101,28 +147,26 @@ with tab1:
     event_desc = st.text_input("Event Description Summary:", placeholder="e.g., Annual Tech Summit on Clean Energy and Sustainability")
     user_interests = st.text_area("Your Core Competencies & Interests (Comma separated):", placeholder="e.g., AI, blockchain, healthcare")
     
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Synthesize Conversation Starters", type="primary"):
         if event_desc.strip() and user_interests.strip():
             with st.spinner("Executing NLP Pipeline Orchestration Steps..."):
-                try:
-                    candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
-                    extracted = cloud_extract_event_themes(event_desc, candidate_labels)
-                    starters = cloud_generate_topics(extracted, user_interests)
-                    session_id = str(uuid.uuid4())
-                    
-                    st.session_state["active_session_id"] = session_id
-                    st.session_state["last_starters"] = starters
-                    
-                    st.session_state["cloud_history"].append({
-                        "id": session_id,
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "event_description": event_desc,
-                        "interests": user_interests,
-                        "starters": starters
-                    })
-                    st.success("Analysis Complete!")
-                except Exception as e:
-                    st.error(f"Execution Error: {str(e)}")
+                candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
+                extracted = cloud_extract_event_themes(event_desc, candidate_labels)
+                starters = cloud_generate_topics(extracted, user_interests)
+                session_id = str(uuid.uuid4())
+                
+                st.session_state["active_session_id"] = session_id
+                st.session_state["last_starters"] = starters
+                
+                st.session_state["cloud_history"].append({
+                    "id": session_id,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "event_description": event_desc,
+                    "interests": user_interests,
+                    "starters": starters
+                })
+                st.success("Analysis Complete!")
         else:
             st.warning("Please supply valid text contents for both context forms.")
 
@@ -130,7 +174,7 @@ with tab1:
         st.markdown("---")
         st.subheader("💡 Suggested Icebreaker Suggestions:")
         for idx, starter in enumerate(st.session_state["last_starters"]):
-            st.info(starter)
+            st.markdown(f'<div class="icebreaker-box">{starter}</div>', unsafe_allow_html=True)
             col1, col2 = st.columns([1, 10])
             if col1.button(f"👍 Upvote {idx+1}", key=f"like_{idx}"):
                 st.toast("Upvote registered inside telemetry logs!")
@@ -144,9 +188,6 @@ with tab2:
     if st.button("Run Verification Query", type="secondary"):
         if topic_query.strip():
             with st.spinner("Extracting verified reference blocks..."):
-                try:
-                    summary = cloud_fetch_wikipedia_summary(topic_query)
-                    st.success("Verification Complete!")
-                    st.info(summary)
-                except Exception as e:
-                    st.error(f"Verification processing engine error: {str(e)}")
+                summary = cloud_fetch_wikipedia_summary(topic_query)
+                st.success("Verification Complete!")
+                st.markdown(f'<div class="wiki-box"><b>📚 Verified Concept Summary:</b><br><br>{summary}</div>', unsafe_allow_html=True)
