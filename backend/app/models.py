@@ -1,18 +1,15 @@
 import sqlite3
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 
 DB_FILE = "networking_assistant.db"
 
 def init_db():
-    """Initializes the fully normalized 6-table relational database schema."""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    
-    # Enable foreign key support in SQLite
     cursor.execute("PRAGMA foreign_keys = ON;")
 
-    # 1. User Profile Table
+    # 1. Users Profile Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Users_Profile (
             UserID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +17,6 @@ def init_db():
             currentEventCache TEXT
         )
     """)
-
     # 2. Event Context Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Event_Context (
@@ -29,8 +25,7 @@ def init_db():
             AnalyzedThemes TEXT
         )
     """)
-
-    # 3. Networking Session Table (Focal point linking User and Event)
+    # 3. Networking Session Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Networking_Session (
             SessionID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,8 +36,7 @@ def init_db():
             FOREIGN KEY (EventID) REFERENCES Event_Context(EventID) ON DELETE CASCADE
         )
     """)
-
-    # 4. Generated Starter Table (1 to Many from Session)
+    # 4. Generated Starter Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Generated_Starter (
             StarterID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,8 +46,7 @@ def init_db():
             FOREIGN KEY (SessionID) REFERENCES Networking_Session(SessionID) ON DELETE CASCADE
         )
     """)
-
-    # 5. Wikipedia Fact Check Table (1 to Many from Session)
+    # 5. Wikipedia Fact Check Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Wikipedia_Fact_Check (
             FactCheckID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,8 +57,7 @@ def init_db():
             FOREIGN KEY (SessionID) REFERENCES Networking_Session(SessionID) ON DELETE CASCADE
         )
     """)
-
-    # 6. Log Entry Table (System auditing & analytics logs)
+    # 6. Log Entry Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Log_Entry (
             LogID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,21 +68,12 @@ def init_db():
             FOREIGN KEY (SessionID) REFERENCES Networking_Session(SessionID) ON DELETE SET NULL
         )
     """)
-
     conn.commit()
     conn.close()
 
-# Execute schema setup automatically on module initialization
 init_db()
 
-
-# --- Pydantic Structural Validation Schemas for Application Input/Output ---
-class UserProfileModel(BaseModel):
-    bio_text: str
-    current_event_cache: Optional[str] = None
-
 class StarterRequest(BaseModel):
-    user_id: Optional[int] = None  # Links back to profile
     event_description: str
     interests: str
 
