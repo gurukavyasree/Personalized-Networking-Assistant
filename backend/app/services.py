@@ -1,28 +1,88 @@
+import requests
+import re
+from transformers import pipeline, set_seed
+
+# --- MODULE LEVEL INSTANTIATION ---
+# Crucial detail for reproducibility: fixing the random seed ensures consistent outputs
+set_seed(42)
+
+try:
+    classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
+    # Instantiating the GPT-2 small generative pipeline at module level
+    generator = pipeline("text-generation", model="gpt2")
+except Exception:
+    classifier = None
+    generator = None
+
+def extract_event_themes(event_description: str, candidate_labels: list = None) -> list:
+    """Epic 2 Story 2: Event Analyzer Service."""
+    if not candidate_labels:
+        candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
+    if classifier:
+        try:
+            result = classifier(event_description, candidate_labels)
+            return result["labels"][:3]
+        except Exception:
+            return ["AI", "tech", "business"][:3]
+    return ["AI", "healthcare", "blockchain"][:3]
+
+def generate_topics(extracted_themes: list, interests: str) -> list:
+    """
+    Epic 2 Story 3: Topic Generator Service Development.
+    Constructs a structured prompt narrative guiding GPT-2 toward producing concise, 
+    human-like professional networking conversation starters.
+    """
+    themes_str = ", ".join(extracted_themes)
+    
+    # Prompt engineering: interpolating inputs into a first-person context narrative
+    prompt = (
+        f"I am attending a professional networking event focused on {themes_str}. "
+        f"My professional background and core interests include: {interests}.\n"
+        f"Here are three natural, short, engaging conversation starter lines I will use:\n1."
+    )
+    
+    starters = []
+    if generator:
+        try:
+            # max_length=80 limits text tokens to keep suggestions concise and practical
+            outputs = generator(prompt, max_length=80, num_return_sequences=1, do_sample=True, temperature=0.7)
+            gen_text = outputs[0]["generated_text"].replace(prompt, "1.").strip()
+            
+            # Post-processing: split by newlines, extract the first three lines, and clean bullet/number markers
+            lines = gen_text.split("\n")
+            for line in lines:
+                cleaned = re.sub(r'^[\d\.\-\*\s]+', '', line).strip()
+                if len(cleaned) > 10 and len(starters) < 3:
+                    starters.append(cleaned)
+        except Exception:
+            pass
+
+    # High-quality fallback template if generation encounters pipeline runtime limits
+    if len(starters) < 2:
+        starters = [
+            f"Hi! I noticed this session highlights themes surrounding {themes_str}. Given your focus on '{interests}', what are your thoughts on where things are heading?",
+            f"Great event so far! I'm trying to connect with professionals working with '{interests}'—how has your experience been?",
+            f"What brings you to this track? I found the topics about {extracted_themes[0] if extracted_themes else 'tech'} closely align with my background."
+        ]
+    return starters[:3]
+
+def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
+    """Orchestrates the theme extraction and topic generation modules together."""
+    themes = extract_event_themes(event_description)
+    starters = generate_topics(themes, interests)
+    return {
+        "extracted_themes": themes,
+        "starters": starters
+    }
+
 def fetch_wikipedia_summary(topic: str) -> str:
-    """
-    Epic 2 Story 4: Fact Checker Service Development.
-    Queries the Wikipedia REST API without authentication keys to retrieve structured summary metrics.
-    Uses defensive programming via an explicit try-except block to gracefully catch timeouts or network drops.
-    """
-    # Defensive programming: clean text and parse into accurate URL structures
+    """Queries the official Wikipedia Rest API to retrieve verified descriptive text summaries."""
     formatted_topic = topic.strip().replace(" ", "_")
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_topic}"
-    
     try:
-        # Pull transactional JSON data directly from the verified external knowledge base
         res = requests.get(url, timeout=5)
-        
         if res.status_code == 200:
-            # Safely capture the first paragraph text extract from the structured JSON body
             return res.json().get("extract", "No summary text generated.")
-        elif res.status_code == 404:
-            return f"Could not find matching Wikipedia records for '{topic}'."
-        else:
-            return "External validation server responded with an error."
-            
-    except requests.exceptions.Timeout:
-        # Handle unpredictable network latency issues gracefully without throwing a system crash
-        return "Fact verification query timed out. Please try again."
+        return f"Could not pull wiki records for '{topic}'."
     except Exception:
-        # Catch-all safe fallback string to maintain total backend production uptime
-        return "Internal connectivity pipeline dropped connection to the external validation service."
+        return "Wiki service validation timeout error."
