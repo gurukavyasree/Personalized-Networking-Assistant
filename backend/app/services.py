@@ -2,20 +2,19 @@ import requests
 import re
 from transformers import pipeline, set_seed
 
-# --- MODULE LEVEL INSTANTIATION ---
-# Crucial detail for reproducibility: fixing the random seed ensures consistent outputs
+# Fix random seed for reproducibility
 set_seed(42)
 
 try:
+    # Loads DistilBERT for themes once at startup
     classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
-    # Instantiating the GPT-2 small generative pipeline at module level
+    # Loads GPT-2 for short conversation starters
     generator = pipeline("text-generation", model="gpt2")
 except Exception:
     classifier = None
     generator = None
 
 def extract_event_themes(event_description: str, candidate_labels: list = None) -> list:
-    """Epic 2 Story 2: Event Analyzer Service."""
     if not candidate_labels:
         candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability"]
     if classifier:
@@ -27,28 +26,17 @@ def extract_event_themes(event_description: str, candidate_labels: list = None) 
     return ["AI", "healthcare", "blockchain"][:3]
 
 def generate_topics(extracted_themes: list, interests: str) -> list:
-    """
-    Epic 2 Story 3: Topic Generator Service Development.
-    Constructs a structured prompt narrative guiding GPT-2 toward producing concise, 
-    human-like professional networking conversation starters.
-    """
     themes_str = ", ".join(extracted_themes)
-    
-    # Prompt engineering: interpolating inputs into a first-person context narrative
     prompt = (
         f"I am attending a professional networking event focused on {themes_str}. "
         f"My professional background and core interests include: {interests}.\n"
         f"Here are three natural, short, engaging conversation starter lines I will use:\n1."
     )
-    
     starters = []
     if generator:
         try:
-            # max_length=80 limits text tokens to keep suggestions concise and practical
             outputs = generator(prompt, max_length=80, num_return_sequences=1, do_sample=True, temperature=0.7)
             gen_text = outputs[0]["generated_text"].replace(prompt, "1.").strip()
-            
-            # Post-processing: split by newlines, extract the first three lines, and clean bullet/number markers
             lines = gen_text.split("\n")
             for line in lines:
                 cleaned = re.sub(r'^[\d\.\-\*\s]+', '', line).strip()
@@ -57,7 +45,6 @@ def generate_topics(extracted_themes: list, interests: str) -> list:
         except Exception:
             pass
 
-    # High-quality fallback template if generation encounters pipeline runtime limits
     if len(starters) < 2:
         starters = [
             f"Hi! I noticed this session highlights themes surrounding {themes_str}. Given your focus on '{interests}', what are your thoughts on where things are heading?",
@@ -67,16 +54,11 @@ def generate_topics(extracted_themes: list, interests: str) -> list:
     return starters[:3]
 
 def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
-    """Orchestrates the theme extraction and topic generation modules together."""
     themes = extract_event_themes(event_description)
     starters = generate_topics(themes, interests)
-    return {
-        "extracted_themes": themes,
-        "starters": starters
-    }
+    return {"extracted_themes": themes, "starters": starters}
 
 def fetch_wikipedia_summary(topic: str) -> str:
-    """Queries the official Wikipedia Rest API to retrieve verified descriptive text summaries."""
     formatted_topic = topic.strip().replace(" ", "_")
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_topic}"
     try:
