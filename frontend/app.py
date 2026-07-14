@@ -12,83 +12,102 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- LUXURY PROFESSIONAL DARK THEME INJECTIONS ---
+# --- MODERN WEB TYPOGRAPHY & DESIGN SYSTEM ---
 st.markdown("""
+    <!-- Import Premium Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        /* Base page styling setup */
-        .stApp {
+        /* Apply global typography updates */
+        html, body, [class*="css"], .stApp {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
             background-color: #0b0f19 !important;
-            color: #f1f5f9 !important;
+            color: #e2e8f0 !important;
         }
         
-        /* Ultra-Premium Radiant Gradient Header Banner */
+        /* Typography: Premium Main Heading */
+        .main-heading {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        /* Typography: Subtitles */
+        .sub-heading {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: #94a3b8;
+            letter-spacing: -0.01em;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+        
+        /* Elegant Premium Header Container Wrap */
         .header-container {
-            background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #0f172a 100%);
-            padding: 40px;
-            border-radius: 20px;
-            color: white;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(180deg, #161b2c 0%, #0f1322 100%);
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
             margin-bottom: 35px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             text-align: center;
         }
         
-        /* Glassmorphism Input Containers */
-        div[data-testid="stForm"], .stTextInput, .stTextArea {
-            background-color: #111827 !important;
-            border-radius: 12px !important;
-        }
-
-        /* Glowing Futuristic Cards for Icebreaker Suggestions */
+        /* Modernized Text Blocks formatting rules */
         .icebreaker-box {
-            background: linear-gradient(145deg, #111827, #1f2937);
-            padding: 24px;
-            border-radius: 14px;
-            border-left: 5px solid #6366f1;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            margin-bottom: 18px;
-            font-size: 1.1rem;
-            color: #e2e8f0;
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-            border-right: 1px solid rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #111827;
+            padding: 22px;
+            border-radius: 12px;
+            border-left: 4px solid #8b5cf6;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #f1f5f9;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .icebreaker-box:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.15);
-            border-left-color: #818cf8;
+            transform: translateX(3px);
+            border-left-color: #a78bfa;
+            background-color: #161e31;
         }
         
-        /* Glowing Futuristic Cards for Fact Validator Output */
         .wiki-box {
-            background: linear-gradient(145deg, #111827, #1f2937);
-            padding: 28px;
-            border-radius: 14px;
-            border-left: 5px solid #06b6d4;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            margin-top: 18px;
-            line-height: 1.7;
+            background-color: #111827;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid #0ea5e9;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 16px;
+            line-height: 1.65;
+            font-size: 1.02rem;
             color: #cbd5e1;
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-            border-right: 1px solid rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
         }
 
-        /* Deep Custom Sidebar Palette */
+        /* Customize Tab Header text elements */
+        button[data-baseweb="tab"] {
+            font-weight: 500 !important;
+            letter-spacing: -0.01em !important;
+        }
+
+        /* Sidebar Clean Layout adjustments */
         section[data-testid="stSidebar"] {
             background-color: #070a13 !important;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Customize Tab selectors */
-        button[data-baseweb="tab"] {
-            color: #94a3b8 !important;
-            font-size: 1.05rem !important;
-        }
-        button[data-baseweb="tab"][aria-selected="true"] {
-            color: #6366f1 !important;
-            font-weight: bold !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -129,11 +148,11 @@ def cloud_fetch_wikipedia_summary(topic):
 if "cloud_history" not in st.session_state:
     st.session_state["cloud_history"] = []
 
-# --- MAIN PREMIUM RADIANT HEADER CONTAINER ---
+# --- TYPOGRAPHY FOCUSED MAIN BANNERS ---
 st.markdown("""
     <div class="header-container">
-        <h1 style='margin:0; font-size: 2.75rem; font-weight: 800; letter-spacing: -0.75px; background: linear-gradient(to right, #ffffff, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>🤝 AI-Powered Personalized Networking Assistant</h1>
-        <p style='margin:10px 0 0 0; color: #94a3b8; font-size: 1.1rem;'>Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines</p>
+        <h1 class="main-heading">🤝 AI-Powered Personalized Networking Assistant</h1>
+        <p class="sub-heading">Finetuned Modular Interface with Zero-Shot & Generative NLP Pipelines</p>
     </div>
 """, unsafe_allow_html=True)
 
