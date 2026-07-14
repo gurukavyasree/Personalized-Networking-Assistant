@@ -1,69 +1,70 @@
 import requests
 from transformers import pipeline
 
-# --- MODULE LEVEL INSTANTIATION (Intentional Design Decision) ---
-# This loads the DistilBERT model into memory once at startup for high performance
+# --- MODULE LEVEL INSTANTIATION ---
+# Loading models into memory once at startup ensures fast real-time web application responses
 try:
+    # DistilBERT for zero-shot theme extraction
     classifier = pipeline("zero-shot-classification", model="distilbert-base-uncased-distilled-squad")
+    # GPT-2 Small for contextually coherent conversation generation
+    generator = pipeline("text-generation", model="gpt2")
 except Exception:
-    # Safe fallback if environment lacks local download capability during verification
     classifier = None
+    generator = None
 
 def analyze_and_generate_starters(event_description: str, interests: str) -> dict:
     """
-    Scenario 1: Sai Varshini's Complete ML Pipeline.
-    Uses DistilBERT zero-shot classification to score and extract the top 3 highest-scoring themes,
-    then uses them to build context-aware conversation starters.
+    Uses DistilBERT for Zero-Shot classification and GPT-2 to synthesize
+    natural, engaging professional conversation starters.
     """
-    candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability", "tech", "business"]
+    candidate_labels = ["AI", "healthcare", "blockchain", "education", "sustainability", "tech"]
     extracted_themes = []
 
-    # 1. Zero-Shot Classification Theme Extraction
+    # 1. DistilBERT Zero-Shot Classification
     if classifier:
         try:
             combined_context = f"{event_description} {interests}"
-            result = classifier(combined_context, candidate_labels)
-            # Grab the top 3 highest-scoring themes based on model output
-            extracted_themes = result["labels"][:3]
+            res = classifier(combined_context, candidate_labels)
+            extracted_themes = res["labels"][:3]
         except Exception:
-            extracted_themes = ["AI & Tech", "Sustainability"]
+            extracted_themes = ["Tech", "Business"]
     else:
-        # Fallback keyword analyzer matching your prior framework version
-        combined_text = f"{event_description} {interests}".lower()
-        if "ai" in combined_text or "tech" in combined_text:
-            extracted_themes.append("AI & Tech")
-        if "sustainability" in combined_text or "green" in combined_text:
-            extracted_themes.append("Sustainability")
-        if not extracted_themes:
-            extracted_themes = ["General Networking", "Professional Development"]
+        extracted_themes = ["General Networking"]
 
-    # 2. Dynamic Conversation Starter Generation Engine
-    starters = [
-        f"Hi! I noticed the event highlights themes surrounding {', '.join(extracted_themes)}. Given your background in '{interests}', what's your take on this?",
-        f"Attending this '{event_description}' is a great opportunity. I'm focusing on projects matching {extracted_themes[0]}—are you working on anything similar?"
-    ]
+    # 2. GPT-2 Small Conversation Generation
+    prompt = f"Create a short professional networking icebreaker line for an event about {', '.join(extracted_themes)} given the background: {interests}."
+    
+    starters = []
+    if generator:
+        try:
+            # Generate short, punchy opening lines efficiently using GPT-2
+            gen_outputs = generator(prompt, max_new_tokens=30, num_return_sequences=2, do_sample=True, temperature=0.7)
+            for out in gen_outputs:
+                text = out["generated_text"].replace(prompt, "").strip()
+                # Clean up formatting artifacting if any exist
+                clean_text = text.split("\n")[0] if "\n" in text else text
+                if len(clean_text) > 10:
+                    starters.append(clean_text)
+        except Exception:
+            pass
 
-    return {
-        "extracted_themes": extracted_themes,
-        "starters": starters
-    }
+    # Fallback to structural context-aware templates if generation pipeline hits resource limits
+    if len(starters) < 2:
+        starters = [
+            f"Hi! I noticed the event highlights themes surrounding {', '.join(extracted_themes)}. Given your background in '{interests}', what's your take on this?",
+            f"Attending this '{event_description}' is a great opportunity. I'm focusing on projects matching {extracted_themes[0]}—are you working on anything similar?"
+        ]
+
+    return {"extracted_themes": extracted_themes, "starters": starters[:2]}
 
 def fetch_wikipedia_summary(topic: str) -> str:
-    """
-    Scenario 2: Queries the official Wikipedia Rest API to retrieve 
-    verified descriptive text summaries.
-    """
+    """Queries the official Wikipedia Rest API to retrieve verified descriptive text summaries."""
     formatted_topic = topic.strip().replace(" ", "_")
     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_topic}"
-    
     try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("extract", "No descriptive overview available.")
-        elif response.status_code == 404:
-            return f"Could not locate verified summaries for topic: '{topic}'."
-        else:
-            return "Unable to complete validation verification request at this time."
+        res = requests.get(url, timeout=5)
+        if res.status_code == 200:
+            return res.json().get("extract", "No summary text generated.")
+        return f"Could not pull wiki records for '{topic}'."
     except Exception:
-        return "Internal connectivity pipeline dropped connection."
+        return "Wiki service validation timeout error."
