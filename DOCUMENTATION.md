@@ -14,3 +14,27 @@ Additionally, the architecture establishes a defensive external knowledge-verifi
 * **Zero-Shot Theme Extraction:** Eliminate the need for massive labeled training sets by leveraging pre-trained weights (`DistilBERT`) for real-time text classification.
 * **Generative Hook Synthesis:** Utilize language generation assets (`GPT-2 Small`) to draft natural, target-specific conversational hooks.
 * **Defensive API Interactions:** Establish resilient external API configurations capable of pulling live data frameworks from the Wikipedia REST API without risking `403 Forbidden` errors.
+
+## 2. Architectural Blueprint
+
+The platform relies on a decoupled design pattern separating the client dashboard presentation layer from the background computing servers.
+
+```text
+  +-----------------------------------------------------------+
+  |                   Streamlit Frontend UI                   |
+  |     (Persistent Session States & Custom CSS Grids)        |
+  +-----------------------------+-----------------------------+
+                                |
+                   (Asynchronous HTTP Requests)
+                                |
+                                v
+  +-----------------------------------------------------------+
+  |                    FastAPI Backend Router                 |
+  |             (API Gateways & Data Validation)              |
+  +-------+-------------------------------------------+-------+
+          |                                           |
+          v                                           v
++--------------------+                      +--------------------+
+|  Hugging Face Core |                      | Wikipedia REST API |
+| (DistilBERT/GPT-2) |                      | (Defensive Header) |
++--------------------+                      +--------------------+
