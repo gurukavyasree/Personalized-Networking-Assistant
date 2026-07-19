@@ -38,3 +38,22 @@ The platform relies on a decoupled design pattern separating the client dashboar
 |  Hugging Face Core |                      | Wikipedia REST API |
 | (DistilBERT/GPT-2) |                      | (Defensive Header) |
 +--------------------+                      +--------------------+
+
+
+
+## 3. Local Development Environment Setup
+
+Follow these sequential steps to safely deploy the application stack locally on your physical workspace:
+
+### Prerequisites
+*   **Python 3.11** or higher installed on your system path.
+*   **Git** version control framework installed.
+*   **Visual Studio Code** (or your preferred IDE).
+
+### Step-by-Step Installation
+
+#### 1. Clone the Repository
+Open your computer's terminal or command prompt and run:
+```bash
+git clone [https://github.com/gurukavyasree/Personalized-Networking-Assistant.git](https://github.com/gurukavyasree/Personalized-Networking-Assistant.git)
+cd Personalized-Networking-Assistant
