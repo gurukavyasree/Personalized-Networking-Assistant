@@ -15,6 +15,8 @@ Additionally, the architecture establishes a defensive external knowledge-verifi
 * **Generative Hook Synthesis:** Utilize language generation assets (`GPT-2 Small`) to draft natural, target-specific conversational hooks.
 * **Defensive API Interactions:** Establish resilient external API configurations capable of pulling live data frameworks from the Wikipedia REST API without risking `403 Forbidden` errors.
 
+---
+
 ## 2. Architectural Blueprint
 
 The platform relies on a decoupled design pattern separating the client dashboard presentation layer from the background computing servers.
@@ -38,55 +40,3 @@ The platform relies on a decoupled design pattern separating the client dashboar
 |  Hugging Face Core |                      | Wikipedia REST API |
 | (DistilBERT/GPT-2) |                      | (Defensive Header) |
 +--------------------+                      +--------------------+
-
-
-
-## 3. Local Development Environment Setup
-
-Follow these sequential steps to safely deploy the application stack locally on your physical workspace:
-
-### Prerequisites
-*   **Python 3.11** or higher installed on your system path.
-*   **Git** version control framework installed.
-*   **Visual Studio Code** (or your preferred IDE).
-
-### Step-by-Step Installation
-
-#### 1. Clone the Repository
-Open your computer's terminal or command prompt and run:
-```bash
-git clone [https://github.com/gurukavyasree/Personalized-Networking-Assistant.git](https://github.com/gurukavyasree/Personalized-Networking-Assistant.git)
-cd Personalized-Networking-Assistant
-
-
-
-
-
-## 4. Codebase Structural Analysis
-
-The application enforces clean separation of concerns across a highly organized directory structure. Below is the functional breakdown of the key architecture components:
-
-### ⚙️ 1. Backend Service Layer (`backend/app/services.py`)
-This module houses the core Natural Language Processing algorithms. It initializes the pipelines for:
-*   **Theme Parsing:** Setting up the `DistilBERT` classification wrapper to compare event keywords against the user's specific skill arrays.
-*   **Prompt Synthesis:** Using `GPT-2 Small` weights to map those parsed themes into structured conversation starters.
-
-### 🖥️ 2. API Router Layer (`backend/app/main.py`)
-Built entirely on top of **FastAPI**, this script serves as the engine's control gateway:
-*   It exposes the REST endpoints that the frontend dashboard calls.
-*   It handles raw data type enforcement and validation, rejecting inputs that do not meet context string criteria.
-
-### 🎨 3. Interface Client Layer (`frontend/app.py`)
-This file controls the responsive **Streamlit** visual user dashboard:
-*   **Design System:** Injects the web font (`Inter`) and custom CSS cards to show the AI output elegantly.
-*   **State Control:** Manages `st.session_state` arrays to store your active run telemetry logs, ensuring users do not lose their generated text history when refreshing data pages.
-
-
-
-
-## 5. API & Interface Validation Operations
-
-### Testing Pipelines
-To confirm endpoint integrity and verify that data maps properly through the FastAPI router layer, execute the automated unit testing scripts located inside the root project directory:
-```bash
-pytest tests/test_main.py
