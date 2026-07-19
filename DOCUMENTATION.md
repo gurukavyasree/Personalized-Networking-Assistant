@@ -80,3 +80,13 @@ Built entirely on top of **FastAPI**, this script serves as the engine's control
 This file controls the responsive **Streamlit** visual user dashboard:
 *   **Design System:** Injects the web font (`Inter`) and custom CSS cards to show the AI output elegantly.
 *   **State Control:** Manages `st.session_state` arrays to store your active run telemetry logs, ensuring users do not lose their generated text history when refreshing data pages.
+
+
+
+
+## 5. API & Interface Validation Operations
+
+### Testing Pipelines
+To confirm endpoint integrity and verify that data maps properly through the FastAPI router layer, execute the automated unit testing scripts located inside the root project directory:
+```bash
+pytest tests/test_main.py
