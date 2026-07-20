@@ -45,21 +45,13 @@ This step-by-step methodology ensured that every component of the application wa
 
 ## 🛠️ Technical Architecture & Model Selection
 
-One of the major strengths of the project lies in the selection of technologies and frameworks that perfectly balance computational efficiency, developer usability, and deployment feasibility:
+A core pillar of this system's success is its carefully curated technology stack. By pairing lightweight, high-performance ML models with asynchronous backend infrastructure, the platform perfectly balances computational efficiency, developer agility, and cloud deployment scalability.
 
-```csv
-+----------------------+-----------------------------+-------------------------------------------------------------+
-| Framework/Model      | Architectural Assignment    | Selection Rationale & Advantage                             |
-+----------------------+-----------------------------+-------------------------------------------------------------+
-| DistilBERT           | Zero-Shot Text Classifier   | Lightweight architecture, rapid inference speeds, robust     |
-|                      |                             | contextual understanding limits.                            |
-+----------------------+-----------------------------+-------------------------------------------------------------+
-| GPT-2 Small          | Generative NLP Starters     | Efficient language modeling suitable for hardware setups     |
-|                      |                             | with constrained compute profiles.                          |
-+----------------------+-----------------------------+-------------------------------------------------------------+
-| FastAPI              | Asynchronous Server API     | High-throughput performance, strong data-type validation,   |
-|                      |                             | and auto-generated documentation tracks.                     |
-+----------------------+-----------------------------+-------------------------------------------------------------+
-| Streamlit            | Premium Custom UX Dashboard | Supported rapid user-interface synthesis and frictionless    |
-|                      |                             | real-time responsive browser controls.                      |
-+----------------------+-----------------------------+-------------------------------------------------------------+
+| Component / Core Stack | Architectural Assignment | Selection Rationale & Strategic Advantage |
+| :--- | :--- | :--- |
+| <img src="https://img.shields.io/badge/DistilBERT-🤖-blue?style=flat-square" alt="DistilBERT"/> | **Zero-Shot Text Classifier** | Features a lightweight, distilled architecture offering rapid inference speeds and highly robust contextual boundaries. |
+| <img src="https://img.shields.io/badge/GPT--2_Small-✨-purple?style=flat-square" alt="GPT-2"/> | **Generative NLP Starters** | Provides efficient, token-optimized language modeling tailored perfectly for hardware setups with constrained compute profiles. |
+| <img src="https://img.shields.io/badge/FastAPI-⚡-009688?style=flat-square" alt="FastAPI"/> | **Asynchronous Server API** | Yields exceptional high-throughput performance, native Pydantic data-type validation, and auto-generated OpenAPI documentation. |
+| <img src="https://img.shields.io/badge/Streamlit-🎨-FF4B4B?style=flat-square" alt="Streamlit"/> | **Premium Custom UX Dashboard** | Facilitates rapid interface prototyping and delivers a frictionless, highly responsive real-time browser experience. |
+
+---
